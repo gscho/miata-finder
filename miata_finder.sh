@@ -2,7 +2,7 @@
 
 message=$(ruby ${ROOTDIR}/find.rb)
 
-if [ -z ${message+x} ]; then
+if [ -z ${message} ]; then
   exit 0
 fi
 
