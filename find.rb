@@ -1,6 +1,5 @@
-#!/usr/bin/env ruby
-
 require 'metainspector'
+require 'net/smtp'
 
 KIJIJI_CACHE = "#{ENV['ROOTDIR']}/.cached_miata_links_kijiji".freeze
 
@@ -12,7 +11,7 @@ previous_miata_links = []
 previous_miata_links = Marshal.load(File.binread(KIJIJI_CACHE)) if File.exist?(KIJIJI_CACHE)
 new_miata_links = current_miata_links - previous_miata_links
 File.open(KIJIJI_CACHE, 'wb') {|f| f.write(Marshal.dump(current_miata_links))}
-return if new_miata_links.empty?
+return puts "No new miatas found #{Time.now}" if new_miata_links.empty?
 
 date = Time.now.strftime('on %m/%d/%Y at %I:%M%p')
 mail = <<-MAIL
@@ -23,4 +22,8 @@ Subject: New Miata Posted #{date}
 #{new_miata_links.join("\n")}
 MAIL
 
-puts mail
+Net::SMTP.start('smtp.gmail.com', 587, 'gmail.com', ENV['MAILFROM'], ENV['MAILPASSWD'], :plain) do |smtp|
+  smtp.send_message(mail, ENV['MAILFROM'], ENV['MAILTO'])
+end
+
+puts "Sucessfully sent email at #{date}"
